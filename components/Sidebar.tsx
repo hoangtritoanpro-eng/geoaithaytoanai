@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Play, 
   RotateCcw, 
@@ -12,11 +12,100 @@ import {
   PenTool,
   Loader2,
   ImagePlus,
-  ImageIcon
+  ImageIcon,
+  Key
 } from 'lucide-react';
 import { EXAMPLES } from '../constants';
 import { LogMessage, ExampleProblem } from '../types';
 import { extractProblemFromImage } from '../services/geminiService';
+
+// --- COMPONENT NHẬP API KEY ---
+const ApiKeyConfig = () => {
+  const [apiKey, setApiKey] = useState('');
+  const [isSaved, setIsSaved] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  // Lấy key đã lưu khi khởi động
+  useEffect(() => {
+    const savedKey = localStorage.getItem('GEMINI_API_KEY_CLIENT');
+    if (savedKey) {
+      setApiKey(savedKey);
+      setIsExpanded(false); // Tự động thu gọn nếu đã có key
+    }
+  }, []);
+
+  const handleSave = () => {
+    if (apiKey.trim()) {
+      localStorage.setItem('GEMINI_API_KEY_CLIENT', apiKey.trim());
+      setIsSaved(true);
+      
+      // Đợi 1.5 giây sau khi lưu sẽ tự động thu gọn lại cho gọn giao diện
+      setTimeout(() => {
+        setIsSaved(false);
+        setIsExpanded(false);
+      }, 1500);
+    } else {
+      alert('Vui lòng nhập mã API hợp lệ.');
+    }
+  };
+
+  // Giao diện khi đã thu gọn
+  if (!isExpanded) {
+    return (
+      <div className="mb-4 flex items-center justify-between bg-teal-50 px-4 py-2.5 rounded-xl border border-teal-100 shadow-sm transition-all">
+        <span className="text-xs font-semibold text-teal-700 flex items-center gap-2">
+          <CheckCircle2 size={16} /> 
+          Đã cấu hình Gemini API Key
+        </span>
+        <button 
+          onClick={() => setIsExpanded(true)} 
+          className="text-xs font-medium text-teal-600 hover:text-teal-800 hover:underline transition-colors"
+        >
+          Thay đổi
+        </button>
+      </div>
+    );
+  }
+
+  // Giao diện form nhập liệu
+  return (
+    <div className="mb-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm transition-all">
+      <div className="flex items-center justify-between mb-2">
+        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+          <Key size={14} className="text-teal-600" />
+          Cấu hình API Key
+        </label>
+        {apiKey && (
+          <button onClick={() => setIsExpanded(false)} className="text-[10px] text-slate-400 hover:text-slate-600">
+            Thu gọn
+          </button>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <input
+          type="password"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          placeholder="Nhập khóa API (sk-...)"
+          className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-colors bg-slate-50"
+        />
+        <button
+          onClick={handleSave}
+          className={`px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 flex items-center justify-center min-w-[70px] ${
+            isSaved ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' : 'bg-teal-600 hover:bg-teal-700 focus:ring-teal-500'
+          }`}
+        >
+          {isSaved ? 'Đã lưu ✓' : 'Lưu'}
+        </button>
+      </div>
+      <p className="text-[10px] text-slate-400 mt-2 italic flex items-center gap-1">
+        * Khóa API được lưu trữ an toàn trên trình duyệt của bạn.
+      </p>
+    </div>
+  );
+};
+// --- HẾT COMPONENT NHẬP API KEY ---
+
 
 interface SidebarProps {
   onGenerate: (prompt: string) => void;
@@ -118,6 +207,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onGenerate, onClear, logs, isLoading 
 
       {/* Input Section */}
       <div className="p-5 flex-1 flex flex-col min-h-0 overflow-y-auto custom-scrollbar">
+        
+        {/* --- CHÈN COMPONENT NHẬP KEY VÀO ĐÂY --- */}
+        <ApiKeyConfig />
+
         <div className="mb-4 relative">
           <div className="flex justify-between items-center mb-2">
             <label className="text-xs font-bold text-teal-600 uppercase tracking-wider flex items-center gap-2">
