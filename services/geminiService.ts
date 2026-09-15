@@ -2,10 +2,13 @@ import { GoogleGenAI } from "@google/genai";
 import { SYSTEM_INSTRUCTION, IMAGE_EXTRACTION_PROMPT } from "../constants";
 
 const getAIClient = () => {
-  const apiKey = process.env.GEMINI_API_KEY;
+  // Đọc API Key đã được lưu từ giao diện thay vì dùng process.env
+  const apiKey = localStorage.getItem('GEMINI_API_KEY_CLIENT');
+  
   if (!apiKey) {
-    throw new Error("API Key is missing. Please configure process.env.GEMINI_API_KEY.");
+    throw new Error("Chưa cấu hình API Key. Vui lòng nhập Gemini API Key trên giao diện.");
   }
+  
   return new GoogleGenAI({ apiKey });
 };
 
